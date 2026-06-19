@@ -232,7 +232,6 @@
   const LOCAL_HISTORY_STORAGE_KEY = 'upstream-monitor-local-history-v1';
   const DIRECT_MODE_STORAGE_KEY = 'upstream-monitor-direct-mode-v1';
   const AUTO_REFRESH_STORAGE_KEY = 'upstream-monitor-auto-refresh-seconds-v1';
-  const COLLECTOR_SERVER_URL = getCollectorServerUrl();
   const app = document.getElementById('app');
 
   let sites = loadSites();
@@ -669,7 +668,7 @@
     const modeLabel = directMode ? '浏览器直连上游' : '服务器采集';
     const hint = directMode
       ? '当前页面会直接请求你填入的上游站点。前提是上游允许跨域，并接受浏览器带上的 token / User ID。'
-      : `当前页面会请求采集服务：${COLLECTOR_SERVER_URL}`;
+      : `当前页面会请求采集服务：${getCollectorServerUrl()}`;
 
     return `
       <section class="panel mode-panel">
@@ -1285,7 +1284,7 @@
         saveDirectMode();
         collectionState = {
           running: false,
-          message: directMode ? '已切换到浏览器直连模式。页面会直接请求上游站点。' : `已切换到服务器采集模式：${COLLECTOR_SERVER_URL}`,
+          message: directMode ? '已切换到浏览器直连模式。页面会直接请求上游站点。' : `已切换到服务器采集模式：${getCollectorServerUrl()}`,
         };
         render();
         if (isServerMode()) {
@@ -1645,7 +1644,7 @@
     const confirmed = window.confirm('服务器备份会下载服务端保存的站点配置和最近结果，可能包含 token / cookie。确定继续吗？');
     if (!confirmed) return;
     try {
-      const response = await fetch(`${COLLECTOR_SERVER_URL}/api/backup`);
+      const response = await fetch(`${getCollectorServerUrl()}/api/backup`);
       const payload = await response.json();
       if (!response.ok) {
         throw new Error(payload.error || `HTTP ${response.status}`);
@@ -1666,7 +1665,7 @@
       return;
     }
     try {
-      const response = await fetch(`${COLLECTOR_SERVER_URL}/api/history?limit=500`);
+      const response = await fetch(`${getCollectorServerUrl()}/api/history?limit=500`);
       const payload = await response.json();
       if (!response.ok) {
         throw new Error(payload.error || `HTTP ${response.status}`);
@@ -1684,7 +1683,7 @@
   async function loadHistorySummary(options = {}) {
     if (!isServerMode()) return;
     try {
-      const response = await fetch(`${COLLECTOR_SERVER_URL}/api/history-summary?limit=1000`);
+      const response = await fetch(`${getCollectorServerUrl()}/api/history-summary?limit=1000`);
       const payload = await response.json();
       if (!response.ok) {
         throw new Error(payload.error || `HTTP ${response.status}`);
@@ -1705,7 +1704,7 @@
   async function loadServerStatus(options = {}) {
     if (!isHttpHosted()) return;
     try {
-      const response = await fetch(`${COLLECTOR_SERVER_URL}/api/server-status`);
+      const response = await fetch(`${getCollectorServerUrl()}/api/server-status`);
       const payload = await response.json();
       if (!response.ok) {
         throw new Error(payload.error || `HTTP ${response.status}`);
@@ -1734,7 +1733,7 @@
     }
 
     try {
-      const response = await fetch(`${COLLECTOR_SERVER_URL}/api/history/backfill-latest`, {
+      const response = await fetch(`${getCollectorServerUrl()}/api/history/backfill-latest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -1792,7 +1791,7 @@
     }
 
     try {
-      const response = await fetch(`${COLLECTOR_SERVER_URL}/api/history?site_id=${encodeURIComponent(siteId)}&limit=20`);
+      const response = await fetch(`${getCollectorServerUrl()}/api/history?site_id=${encodeURIComponent(siteId)}&limit=20`);
       const payload = await response.json();
       if (!response.ok) {
         throw new Error(payload.error || `HTTP ${response.status}`);
@@ -1826,7 +1825,7 @@
       if (!confirmed) return;
       try {
         const payload = JSON.parse(await file.text());
-        const response = await fetch(`${COLLECTOR_SERVER_URL}/api/restore`, {
+        const response = await fetch(`${getCollectorServerUrl()}/api/restore`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -1927,7 +1926,7 @@
   async function collectAllViaServer() {
     try {
       await saveSitesToServer();
-      const response = await fetch(`${COLLECTOR_SERVER_URL}/api/collect`, {
+      const response = await fetch(`${getCollectorServerUrl()}/api/collect`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sites }),
@@ -1974,7 +1973,7 @@
       ...browserResult,
         last_error:
           `${browserResult.last_error} 本地采集服务也未连上：${localResult.error}。` +
-        `请运行 app\\start-local-server.bat，或把工具部署到服务器后从 http(s) 地址打开。当前采集服务地址：${COLLECTOR_SERVER_URL}`,
+        `请运行 app\\start-local-server.bat，或把工具部署到服务器后从 http(s) 地址打开。当前采集服务地址：${getCollectorServerUrl()}`,
       };
     }
 
@@ -1988,7 +1987,7 @@
 
   async function collectOneViaLocalServer(site) {
     try {
-      const response = await fetch(`${COLLECTOR_SERVER_URL}/api/collect-one`, {
+      const response = await fetch(`${getCollectorServerUrl()}/api/collect-one`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ site }),
@@ -2009,7 +2008,7 @@
   async function saveSitesToServer() {
     if (!isServerMode()) return;
     try {
-      await fetch(`${COLLECTOR_SERVER_URL}/api/sites`, {
+      await fetch(`${getCollectorServerUrl()}/api/sites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sites }),
@@ -2022,7 +2021,7 @@
   async function syncFromServer() {
     if (!isServerMode()) return;
     try {
-      const sitesResponse = await fetch(`${COLLECTOR_SERVER_URL}/api/sites`);
+      const sitesResponse = await fetch(`${getCollectorServerUrl()}/api/sites`);
       const sitesPayload = await sitesResponse.json();
       const serverSites = Array.isArray(sitesPayload?.sites) ? sitesPayload.sites : [];
 
@@ -2033,7 +2032,7 @@
         await saveSitesToServer();
       }
 
-      const resultsResponse = await fetch(`${COLLECTOR_SERVER_URL}/api/results`);
+      const resultsResponse = await fetch(`${getCollectorServerUrl()}/api/results`);
       const resultsPayload = await resultsResponse.json();
       applyResultsOutput(resultsPayload);
       await loadHistorySummary({ silent: true, skipRender: true });
