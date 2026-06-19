@@ -1403,9 +1403,12 @@
 
     document.getElementById('export-sites').onclick = exportSites;
     document.getElementById('export-full-backup').onclick = exportFullBackup;
-    document.getElementById('server-backup').onclick = downloadServerBackup;
-    document.getElementById('server-history').onclick = downloadServerHistory;
-    document.getElementById('server-restore').onclick = restoreServerBackup;
+    const serverBackupButton = document.getElementById('server-backup');
+    if (serverBackupButton) serverBackupButton.onclick = downloadServerBackup;
+    const serverHistoryButton = document.getElementById('server-history');
+    if (serverHistoryButton) serverHistoryButton.onclick = downloadServerHistory;
+    const serverRestoreButton = document.getElementById('server-restore');
+    if (serverRestoreButton) serverRestoreButton.onclick = restoreServerBackup;
 
     document.getElementById('import-sites').onclick = function () {
       const input = document.createElement('input');
